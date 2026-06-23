@@ -5,8 +5,6 @@ config.py
 logs/
 data/
 dashboard/
-streamlit_app.py
-prepare_streamlit_secrets.py
 .devcontainer/
 __pycache__/
 .venv/

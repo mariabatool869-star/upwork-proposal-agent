@@ -3,9 +3,15 @@
 from __future__ import annotations
 
 import json
+import sys
 from http.server import BaseHTTPRequestHandler
+from pathlib import Path
 
-from sheets_data import build_dashboard_payload
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from lib.sheets_data import build_dashboard_payload
 
 
 class handler(BaseHTTPRequestHandler):
