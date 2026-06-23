@@ -239,12 +239,12 @@ else:
     {', '.join(config.PROFILE.get('skills', [])[:12])}
     """)
 # ============================================================
-# VERCEL - Expose app
+# VERCEL DEPLOYMENT - Handler
 # ============================================================
 
-# This is what Vercel looks for
+# This is what Vercel needs
 app = st
 
-# Handler function
 def handler(request=None):
+    """Vercel serverless function handler."""
     return app
