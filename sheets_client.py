@@ -6,7 +6,7 @@ Used by the agent (sheets_logger) and the Streamlit dashboard (data_utils).
 import logging
 
 import gspread
-from oauth2client.service_account import ServiceAccountCredentials
+from google.oauth2.service_account import Credentials
 
 from config_loader import load_config
 
@@ -15,7 +15,7 @@ config = load_config()
 logger = logging.getLogger(__name__)
 
 SHEETS_SCOPE = [
-    "https://spreadsheets.google.com/feeds",
+    "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive",
 ]
 
@@ -28,10 +28,7 @@ def _credentials_from_streamlit_secrets():
             return None
 
         info = dict(st.secrets["gcp_service_account"])
-        return ServiceAccountCredentials.from_json_keyfile_dict(
-            info,
-            SHEETS_SCOPE,  # pyright: ignore[reportArgumentType]
-        )
+        return Credentials.from_service_account_info(info, scopes=SHEETS_SCOPE)
     except Exception:
         return None
 
@@ -41,10 +38,7 @@ def _credentials_from_file():
     if not creds_path.exists():
         return None
 
-    return ServiceAccountCredentials.from_json_keyfile_name(
-        str(creds_path),
-        SHEETS_SCOPE,  # pyright: ignore[reportArgumentType]
-    )
+    return Credentials.from_service_account_file(str(creds_path), scopes=SHEETS_SCOPE)
 
 
 def get_sheets_workbook():
@@ -62,7 +56,7 @@ def get_sheets_workbook():
         return None
 
     try:
-        client = gspread.authorize(creds)  # type: ignore[arg-type]
+        client = gspread.authorize(creds)
         workbook = client.open_by_key(config.GOOGLE_SHEETS_ID)
         logger.info("Connected to Google Sheets")
         return workbook
