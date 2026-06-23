@@ -1,20 +1,30 @@
 """
 Upwork AI Agent — Portfolio Dashboard
-Showcases automation achievements: jobs scored, proposals drafted, analytics.
+Shows automation achievements: jobs scored, proposals drafted, analytics.
 """
 import subprocess
 import sys
 from pathlib import Path
 
+# ============================================================
+# FIX: Add root directory to path so config can be found
+# ============================================================
+ROOT_DIR = Path(__file__).resolve().parent.parent
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
+# Try to import config
+try:
+    import config
+except ImportError:
+    # If config is in the same folder, add that too
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    import config
+
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
-
-import config
 from auth import check_auth, current_user, login, logout
 from data_utils import get_daily_chart, get_jobs_dataframe, get_recent_jobs, get_stats
 
@@ -105,7 +115,7 @@ with st.sidebar:
         with st.spinner("Running main.py..."):
             r = subprocess.run(
                 [sys.executable, "main.py"],
-                cwd=str(PROJECT_ROOT),
+                cwd=str(ROOT_DIR),
                 capture_output=True,
                 text=True,
                 timeout=300,
@@ -238,13 +248,3 @@ else:
     ### Skills
     {', '.join(config.PROFILE.get('skills', [])[:12])}
     """)
-# ============================================================
-# VERCEL DEPLOYMENT - Handler
-# ============================================================
-
-# This is what Vercel needs
-app = st
-
-def handler(request=None):
-    """Vercel serverless function handler."""
-    return app
