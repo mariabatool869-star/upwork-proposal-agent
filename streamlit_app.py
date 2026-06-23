@@ -1,11 +1,10 @@
 """
 Streamlit Community Cloud entry point.
-Deploy main file: streamlit_app.py (same GitHub → deploy flow as Vercel).
+Deploy at: https://share.streamlit.io
+Main file: streamlit_app.py
 
-Local run:
-  python -m streamlit run streamlit_app.py
+Local:  python -m streamlit run streamlit_app.py
 """
-import runpy
 import sys
 from pathlib import Path
 
@@ -20,4 +19,4 @@ except ImportError:
 
 sys.modules["config"] = config
 
-runpy.run_path(str(ROOT / "dashboard" / "app.py"), run_name="__main__")
+import app  # noqa: F401 — loads dashboard/app.py
