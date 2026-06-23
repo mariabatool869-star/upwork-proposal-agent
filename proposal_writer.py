@@ -1,138 +1,105 @@
 """
-Proposal writer — generates professional proposals.
-ALWAYS returns a proposal, never crashes.
+Proposal writer using Google Gemini API (AQ. key format).
 """
 import logging
-
+import os
+import requests
 from dotenv import load_dotenv
 
 load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-genai = None
-HAS_GEMINI = False
-
-try:
-    import google.generativeai as genai
-    from config import GEMINI_API_KEY
-
-    if GEMINI_API_KEY and GEMINI_API_KEY.startswith("AIza"):
-        genai.configure(api_key=GEMINI_API_KEY)
-        HAS_GEMINI = True
-        logger.info("✅ Gemini AI is ready")
-    else:
-        logger.info("ℹ️ Using fallback proposals (no Gemini key)")
-except ImportError:
-    logger.info("ℹ️ Using fallback proposals (Gemini not installed)")
-except Exception as exc:
-    logger.info("ℹ️ Using fallback proposals (%s)", exc)
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY', '')
 
 
 def generate_proposal(job_data, profile):
     """
-    Generate a proposal — ALWAYS returns a proposal.
-    Never crashes, even if Gemini fails.
+    Generate a proposal using Gemini API with AQ. format key.
     """
     try:
-        # Try Gemini if available
-        if HAS_GEMINI:
-            try:
-                proposal = _generate_with_gemini(job_data, profile)
-                if proposal and len(proposal) > 20:
-                    logger.info(f"✅ Gemini proposal generated")
-                    return proposal
-            except Exception as e:
-                logger.warning(f"Gemini failed: {e}")
-        
-        # Always fallback to professional proposal
-        return _generate_fallback_proposal(job_data, profile)
-        
-    except Exception as e:
-        logger.error(f"Proposal error: {e}")
-        return _generate_emergency_proposal(job_data)
+        if not GEMINI_API_KEY:
+            logger.warning("No Gemini API key found")
+            return _generate_fallback_proposal(job_data, profile)
 
+        # Extract job details
+        title = job_data.get('title', 'the position')
+        description = job_data.get('description', '')
+        budget = job_data.get('budget', 'negotiable')
 
-def _generate_with_gemini(job_data, profile):
-    """Generate proposal using Gemini AI."""
-    if genai is None:
-        return None
+        name = profile.get("name", "Maria")
+        rate = profile.get("rate", "$50/hour")
+        skills = ", ".join(profile.get("skills", ["Python", "AI", "Automation"])[:4])
 
-    title = job_data.get('title', 'the position')
-    description = job_data.get('description', '')
-    budget = job_data.get('budget', 'negotiable')
-    
-    name = profile.get("name", "Maria")
-    rate = profile.get("rate", "$50/hour")
-    skills = ", ".join(profile.get("skills", ["Python", "AI", "Automation"])[:4])
-    bio = profile.get("bio", "Senior developer with 13 years of experience")
-    
-    prompt = f"""
-Write a short, professional proposal for this freelance job.
+        prompt = f"""
+You are a professional freelance proposal writer. Write a short, compelling proposal for this job.
 
 JOB:
 - Title: {title}
-- Description: {description[:300]}
+- Description: {description}
 - Budget: {budget}
 
 MY PROFILE:
 - Name: {name}
 - Rate: {rate}
 - Skills: {skills}
-- Bio: {bio}
 
-RULES:
-- 3-4 sentences
-- Professional tone
-- Mention relevant skills
-- End with call to action
-- No markdown
+3-4 sentences only. Professional tone. End with call to action.
+"""
 
-Proposal:"""
-    
-    model = genai.GenerativeModel('gemini-2.0-flash-lite')
-    response = model.generate_content(prompt)
-    
-    if response and response.text:
-        return response.text.strip()
-    return None
+        # Use the native Gemini endpoint with x-goog-api-key header
+        url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent"
+
+        headers = {
+            "x-goog-api-key": GEMINI_API_KEY,  # ✅ Use header, not query param
+            "Content-Type": "application/json"
+        }
+
+        data = {
+            "contents": [{
+                "parts": [{"text": prompt}]
+            }]
+        }
+
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+
+        if response.status_code == 200:
+            result = response.json()
+            proposal = result.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
+            if proposal:
+                logger.info("✅ Gemini proposal generated")
+                return proposal.strip()
+        else:
+            logger.error(f"Gemini API error: {response.status_code} - {response.text}")
+
+    except Exception as e:
+        logger.error(f"Gemini error: {e}")
+
+    return _generate_fallback_proposal(job_data, profile)
 
 
 def _generate_fallback_proposal(job_data, profile):
-    """Professional proposal without AI."""
+    """Fallback proposal."""
     title = job_data.get('title', 'the position')
     name = profile.get("name", "Maria")
     rate = profile.get("rate", "$50/hour")
     skills = ", ".join(profile.get("skills", ["Python", "AI", "Automation"])[:3])
-    
+
     return f"""Hi,
 
-I'm {name}, a senior developer with expertise in {skills}. 
+I'm {name}, a senior developer with expertise in {skills}.
 
-I can deliver excellent results for your {title} project. I have extensive experience building similar solutions and am available immediately.
+I can deliver excellent results for your {title} project. I'm available at {rate}.
 
-Let's discuss your requirements. I'm available at {rate}.
+Let's discuss your requirements.
 
 Best regards,
 {name}"""
 
 
-def _generate_emergency_proposal(job_data):
-    """Emergency proposal (always works)."""
-    title = job_data.get('title', 'the position')
-    return f"""Hi,
-
-I'm interested in your {title} project. I have the skills and experience to deliver quality work.
-
-Let's connect to discuss how I can help.
-
-Best regards,
-Maria"""
-
-
 def write_proposal(job_data, profile):
-    """Main function — always returns a proposal."""
+    """Main function."""
     proposal = generate_proposal(job_data, profile)
     if not proposal or len(proposal) < 10:
-        proposal = _generate_emergency_proposal(job_data)
+        proposal = _generate_fallback_proposal(job_data, profile)
     return proposal
