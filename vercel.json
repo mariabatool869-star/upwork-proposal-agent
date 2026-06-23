@@ -1,17 +1,14 @@
 {
   "builds": [
     {
-      "src": "dashboard/app.py",
+      "src": "app.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "dashboard/app.py"
+      "dest": "app.py"
     }
-  ],
-  "env": {
-    "STREAMLIT_SERVER_PORT": "8501"
-  }
+  ]
 }
