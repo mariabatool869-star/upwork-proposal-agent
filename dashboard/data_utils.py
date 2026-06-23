@@ -12,8 +12,10 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-import config
+from config_loader import load_config
 from sheets_client import get_worksheet
+
+config = load_config()
 
 logger = logging.getLogger(__name__)
 

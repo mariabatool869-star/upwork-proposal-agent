@@ -12,6 +12,8 @@
 
 !.env.example
 
+.streamlit/secrets.toml
+
 credentials/
 !credentials/README.txt
 

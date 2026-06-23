@@ -13,13 +13,9 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-# Try to import config
-try:
-    import config
-except ImportError:
-    # If config is in the same folder, add that too
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
-    import config
+from config_loader import load_config
+
+config = load_config()
 
 import pandas as pd
 import plotly.express as px
@@ -111,23 +107,31 @@ with st.sidebar:
     if st.button("🔄 Refresh data", width="stretch"):
         load_data.clear()
         st.rerun()
-    if st.button("▶ Run agent now", width="stretch"):
-        with st.spinner("Running main.py..."):
-            r = subprocess.run(
-                [sys.executable, "main.py"],
-                cwd=str(ROOT_DIR),
-                capture_output=True,
-                text=True,
-                timeout=300,
-            )
-            if r.returncode == 0:
-                st.success("Agent finished!")
-                load_data.clear()
-                st.rerun()
-            else:
-                st.error("Agent failed — check logs/agent.log")
-                with st.expander("Error output"):
-                    st.code(r.stderr or r.stdout)
+    can_run_agent = (
+        config.agent_can_run_locally()
+        if hasattr(config, "agent_can_run_locally")
+        else config.CREDENTIALS_FILE.exists() and config.TOKEN_FILE.exists()
+    )
+    if can_run_agent:
+        if st.button("▶ Run agent now", width="stretch"):
+            with st.spinner("Running main.py..."):
+                r = subprocess.run(
+                    [sys.executable, "main.py"],
+                    cwd=str(ROOT_DIR),
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                )
+                if r.returncode == 0:
+                    st.success("Agent finished!")
+                    load_data.clear()
+                    st.rerun()
+                else:
+                    st.error("Agent failed — check logs/agent.log")
+                    with st.expander("Error output"):
+                        st.code(r.stderr or r.stdout)
+    else:
+        st.caption("Run the agent locally with `python main.py` (Gmail OAuth required).")
     st.divider()
     if st.button("Logout", width="stretch"):
         logout()

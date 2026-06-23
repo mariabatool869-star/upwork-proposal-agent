@@ -8,7 +8,9 @@ import logging
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
-import config
+from config_loader import load_config
+
+config = load_config()
 
 logger = logging.getLogger(__name__)
 
@@ -18,22 +20,48 @@ SHEETS_SCOPE = [
 ]
 
 
-def get_sheets_workbook():
-    """Return the spreadsheet workbook, or None if unavailable."""
-    if not config.GOOGLE_SHEETS_ID:
-        logger.warning("GOOGLE_SHEETS_ID not set in .env")
+def _credentials_from_streamlit_secrets():
+    try:
+        import streamlit as st
+
+        if "gcp_service_account" not in st.secrets:
+            return None
+
+        info = dict(st.secrets["gcp_service_account"])
+        return ServiceAccountCredentials.from_json_keyfile_dict(
+            info,
+            SHEETS_SCOPE,  # pyright: ignore[reportArgumentType]
+        )
+    except Exception:
         return None
 
+
+def _credentials_from_file():
     creds_path = config.SHEETS_CREDENTIALS_FILE
     if not creds_path.exists():
-        logger.error("Sheets service account not found: %s", creds_path)
+        return None
+
+    return ServiceAccountCredentials.from_json_keyfile_name(
+        str(creds_path),
+        SHEETS_SCOPE,  # pyright: ignore[reportArgumentType]
+    )
+
+
+def get_sheets_workbook():
+    """Return the spreadsheet workbook, or None if unavailable."""
+    if hasattr(config, "apply_streamlit_secrets"):
+        config.apply_streamlit_secrets()
+
+    if not config.GOOGLE_SHEETS_ID:
+        logger.warning("GOOGLE_SHEETS_ID not set")
+        return None
+
+    creds = _credentials_from_streamlit_secrets() or _credentials_from_file()
+    if not creds:
+        logger.error("Sheets service account credentials not found")
         return None
 
     try:
-        creds = ServiceAccountCredentials.from_json_keyfile_name(
-            str(creds_path),
-            SHEETS_SCOPE,  # pyright: ignore[reportArgumentType]
-        )
         client = gspread.authorize(creds)  # type: ignore[arg-type]
         workbook = client.open_by_key(config.GOOGLE_SHEETS_ID)
         logger.info("Connected to Google Sheets")

@@ -1,13 +1,15 @@
-import streamlit as st
+"""
+Streamlit Cloud entry point.
+
+In Streamlit Cloud set Main file path to: streamlit_app.py
+"""
+
+from pathlib import Path
 import sys
-import os
 
-# Add current directory to path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+ROOT = Path(__file__).resolve().parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
-# Import and run the dashboard
-from dashboard.app import *
-
-if __name__ == "__main__":
-    # The app is already defined in dashboard/app.py
-    pass
+# Import runs the dashboard UI defined in dashboard/app.py
+import dashboard.app  # noqa: F401
