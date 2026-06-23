@@ -18,22 +18,40 @@ SHEETS_SCOPE = [
 ]
 
 
+def _credentials_from_secrets():
+    """Google service account from Streamlit Cloud secrets."""
+    try:
+        import streamlit as st
+
+        if "gcp_service_account" in st.secrets:
+            info = dict(st.secrets["gcp_service_account"])
+            return ServiceAccountCredentials.from_json_keyfile_dict(
+                info,
+                SHEETS_SCOPE,  # pyright: ignore[reportArgumentType]
+            )
+    except Exception as exc:
+        logger.debug("Streamlit Sheets secrets not available: %s", exc)
+    return None
+
+
 def get_sheets_workbook():
     """Return the spreadsheet workbook, or None if unavailable."""
     if not config.GOOGLE_SHEETS_ID:
         logger.warning("GOOGLE_SHEETS_ID not set in .env")
         return None
 
-    creds_path = config.SHEETS_CREDENTIALS_FILE
-    if not creds_path.exists():
-        logger.error("Sheets service account not found: %s", creds_path)
-        return None
-
     try:
-        creds = ServiceAccountCredentials.from_json_keyfile_name(
-            str(creds_path),
-            SHEETS_SCOPE,  # pyright: ignore[reportArgumentType]
-        )
+        creds = _credentials_from_secrets()
+        if creds is None:
+            creds_path = config.SHEETS_CREDENTIALS_FILE
+            if not creds_path.exists():
+                logger.error("Sheets service account not found: %s", creds_path)
+                return None
+            creds = ServiceAccountCredentials.from_json_keyfile_name(
+                str(creds_path),
+                SHEETS_SCOPE,  # pyright: ignore[reportArgumentType]
+            )
+
         client = gspread.authorize(creds)  # type: ignore[arg-type]
         workbook = client.open_by_key(config.GOOGLE_SHEETS_ID)
         logger.info("Connected to Google Sheets")

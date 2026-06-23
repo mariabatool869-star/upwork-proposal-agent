@@ -222,21 +222,30 @@ Copy from `config_sample.py` and edit:
 3. Vercel detects `public/index.html` and `vercel.json` automatically
 4. Click **Deploy**
 
-### Deploy dashboard on Streamlit Cloud (free)
+### Deploy dashboard on Streamlit Cloud (free — same GitHub flow as Vercel)
 
-1. Go to [share.streamlit.io](https://share.streamlit.io) → sign in with GitHub
-2. **New app** → select `mariabatool869-star/upwork-proposal-agent`
-3. **Main file path:** `dashboard/app.py`
-4. Add **Secrets** (TOML) — paste your keys here, **not** in the repo:
+1. Go to [share.streamlit.io](https://share.streamlit.io) → sign in with **GitHub**
+2. Click **Create app** → select repo `mariabatool869-star/upwork-proposal-agent`
+3. **Main file path:** `streamlit_app.py`
+4. **Secrets** → paste from `.streamlit/secrets.toml.example` and fill in real values:
 
 ```toml
 GEMINI_API_KEY = "your-key"
 SLACK_WEBHOOK_URL = "your-webhook"
 GOOGLE_SHEETS_ID = "your-sheet-id"
-MY_NAME = "Your Name"
+MY_NAME = "Maria"
+
+[gcp_service_account]
+type = "service_account"
+project_id = "..."
+private_key = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+client_email = "your-sa@project.iam.gserviceaccount.com"
+# ... copy remaining fields from credentials/sheets_service.json
 ```
 
-5. Deploy
+5. Click **Deploy** — you get a public URL like `https://your-app.streamlit.app`
+
+> Copy every field from your local `credentials/sheets_service.json` into the `[gcp_service_account]` section. Never commit that file to GitHub.
 
 ---
 
