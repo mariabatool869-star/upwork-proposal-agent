@@ -13,7 +13,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from config_loader import load_config
-from sheets_client import get_worksheet
+from sheets_client import diagnose_sheets_connection, get_worksheet
 
 config = load_config()
 
@@ -44,6 +44,11 @@ def get_jobs_dataframe() -> pd.DataFrame:
     except Exception as exc:
         logger.error("Failed to load Sheets: %s", exc)
         return pd.DataFrame()
+
+
+def get_sheets_status() -> tuple[bool, str]:
+    """Connection check for the dashboard (Streamlit Cloud troubleshooting)."""
+    return diagnose_sheets_connection()
 
 
 def _normalize(df: pd.DataFrame) -> pd.DataFrame:

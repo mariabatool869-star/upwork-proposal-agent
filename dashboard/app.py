@@ -22,7 +22,7 @@ import plotly.express as px
 import streamlit as st
 
 from auth import check_auth, current_user, login, logout
-from data_utils import get_daily_chart, get_jobs_dataframe, get_recent_jobs, get_stats
+from data_utils import get_daily_chart, get_jobs_dataframe, get_recent_jobs, get_sheets_status, get_stats
 
 st.set_page_config(
     page_title="Upwork AI Agent | Portfolio",
@@ -91,6 +91,12 @@ def load_data():
 df = load_data()
 stats = get_stats(df)
 daily = get_daily_chart(df)
+sheets_ok, sheets_message = get_sheets_status()
+
+if not sheets_ok:
+    st.warning(f"**Google Sheets not connected** — {sheets_message}")
+elif df.empty:
+    st.info(f"**Sheets connected** — {sheets_message} Run the agent locally (`python main.py`) to add jobs.")
 
 # --- Sidebar ---
 with st.sidebar:
@@ -177,8 +183,10 @@ if page == "Overview":
             st.info("Run the agent to populate data.")
 
     st.subheader("Recent jobs")
-    if df.empty:
-        st.info("No data yet. Click **Run agent now** in the sidebar.")
+    if not sheets_ok:
+        st.warning("Fix the Google Sheets connection above to load job data.")
+    elif df.empty:
+        st.info("No job rows in the sheet yet. Run the agent locally with `python main.py`.")
     else:
         show = get_recent_jobs(df, limit=10).copy()
         if "Date" in show.columns:
