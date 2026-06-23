@@ -1,3 +1,17 @@
+## 🚀 Live Demo
+
+Check out the live dashboard here:
+
+🔗 [Upwork AI Agent Dashboard](https://upwork-proposal-agent-rfdczbgu2nrpek5gtekcqy.streamlit.app/)
+
+**Demo Credentials:**
+- Username: `demo`
+- Password: `demo123`
+
+> ⚠️ **Note:** JavaScript must be enabled in your browser for the app to work properly.
+
+
+
 # Upwork AI Proposal Agent
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
