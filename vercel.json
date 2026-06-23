@@ -1,7 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "name": "upwork-proposal-agent",
-  "public": true,
   "cleanUrls": true,
   "headers": [
     {
