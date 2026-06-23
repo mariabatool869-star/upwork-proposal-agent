@@ -3,6 +3,7 @@ Upwork Proposal Automation — main agent.
 """
 import json
 import logging
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -168,6 +169,11 @@ def main():
             f"Run complete — Jobs: {stats['new']}, Drafted: {stats['drafted']}, "
             f"Skipped: {stats['skipped']}, Errors: {stats['errors']}"
         )
+        sheet_id = os.getenv("GOOGLE_SHEETS_ID", "")
+        if sheet_id:
+            logger.info(
+                "Rows saved to Google Sheets — refresh your Vercel dashboard to see updates."
+            )
 
     except Exception as exc:
         logger.error(f"Run failed: {exc}")

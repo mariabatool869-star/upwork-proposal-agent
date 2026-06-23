@@ -224,14 +224,25 @@ function renderDashboard(data) {
 }
 
 async function loadDashboard() {
+  const refreshBtn = document.getElementById("refresh-btn");
+  const lastRefreshed = document.getElementById("last-refreshed");
+  refreshBtn.disabled = true;
+  refreshBtn.textContent = "Loading…";
   try {
     const data = await fetchData();
     renderDashboard(data);
+    const now = new Date().toLocaleString();
+    if (lastRefreshed) {
+      lastRefreshed.textContent = `Last refreshed: ${now}`;
+    }
   } catch (error) {
     const banner = document.getElementById("status-banner");
     banner.classList.remove("hidden");
     banner.classList.add("warn");
     banner.textContent = `Could not load dashboard data: ${error.message}`;
+  } finally {
+    refreshBtn.disabled = false;
+    refreshBtn.textContent = "🔄 Refresh data";
   }
 }
 
