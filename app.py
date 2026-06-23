@@ -14,7 +14,10 @@ from dashboard.app import main
 if __name__ == "__main__":
     main()
 
-# Vercel handler
+# ============================================================
+# VERCEL HANDLER (REQUIRED)
+# ============================================================
+
 def handler(request):
     """Vercel serverless function handler."""
     return main()
