@@ -4,7 +4,7 @@ Upwork AI Agent — LOCAL Streamlit dashboard (localhost only).
 NOT used on Vercel. The live portfolio site is public/index.html + api/jobs/.
 
 Run:  run_dashboard.bat   or   streamlit run dashboard/streamlit_app.py
-Data: same Google Sheets as the agent (python main.py) and Vercel refresh.
+Data: same Google Sheets as the agent (python run_agent.py) and Vercel refresh.
 """
 import subprocess
 import sys
@@ -100,7 +100,7 @@ sheets_ok, sheets_message = get_sheets_status()
 if not sheets_ok:
     st.warning(f"**Google Sheets not connected** — {sheets_message}")
 elif df.empty:
-    st.info(f"**Sheets connected** — {sheets_message} Run the agent locally (`python main.py`) to add jobs.")
+    st.info(f"**Sheets connected** — {sheets_message} Run the agent locally (`python run_agent.py`) to add jobs.")
 
 # --- Sidebar ---
 with st.sidebar:
@@ -124,9 +124,9 @@ with st.sidebar:
     )
     if can_run_agent:
         if st.button("▶ Run agent now", width="stretch"):
-            with st.spinner("Running main.py..."):
+            with st.spinner("Running run_agent.py..."):
                 r = subprocess.run(
-                    [sys.executable, "main.py"],
+                    [sys.executable, "run_agent.py"],
                     cwd=str(ROOT_DIR),
                     capture_output=True,
                     text=True,
@@ -141,7 +141,7 @@ with st.sidebar:
                     with st.expander("Error output"):
                         st.code(r.stderr or r.stdout)
     else:
-        st.caption("Run the agent locally with `python main.py` (Gmail OAuth required).")
+        st.caption("Run the agent locally with `python run_agent.py` (Gmail OAuth required).")
     st.divider()
     if st.button("Logout", width="stretch"):
         logout()
@@ -190,7 +190,7 @@ if page == "Overview":
     if not sheets_ok:
         st.warning("Fix the Google Sheets connection above to load job data.")
     elif df.empty:
-        st.info("No job rows in the sheet yet. Run the agent locally with `python main.py`.")
+        st.info("No job rows in the sheet yet. Run the agent locally with `python run_agent.py`.")
     else:
         show = get_recent_jobs(df, limit=10).copy()
         if "Date" in show.columns:

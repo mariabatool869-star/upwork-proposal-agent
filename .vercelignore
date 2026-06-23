@@ -11,7 +11,7 @@ __pycache__/
 venv/
 
 # Local agent only — not deployed to Vercel
-main.py
+run_agent.py
 gmail_reader.py
 job_parser.py
 job_scorer.py

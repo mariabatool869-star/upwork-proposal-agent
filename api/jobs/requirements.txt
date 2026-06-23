@@ -1,3 +1,0 @@
-fastapi
-gspread
-google-auth
