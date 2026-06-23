@@ -17,7 +17,10 @@ Secrets belong in .env only:
   - GOOGLE_SHEETS_ID
   - MY_NAME
 
-Google OAuth belongs in credentials.json (download from Google Cloud Console).
+Google credentials belong in the credentials/ folder:
+  - credentials/gmail_oauth.json   — OAuth client for Gmail (Web app type)
+  - credentials/sheets_service.json — Service account for Google Sheets
+  - credentials/token.json          — Auto-created after first Gmail sign-in
 """
 
 import os
@@ -29,9 +32,26 @@ from pathlib import Path
 BASE_DIR = Path(__file__).parent
 LOG_DIR = BASE_DIR / "logs"
 DATA_DIR = BASE_DIR / "data"
+CREDENTIALS_DIR = BASE_DIR / "credentials"
 PROCESSED_EMAILS_FILE = DATA_DIR / "processed_emails.json"
-CREDENTIALS_FILE = BASE_DIR / "credentials.json"
-TOKEN_FILE = BASE_DIR / "token.json"
+
+
+def _credential_path(preferred: Path, legacy: Path) -> Path:
+    return preferred if preferred.exists() else legacy
+
+
+CREDENTIALS_FILE = _credential_path(
+    CREDENTIALS_DIR / "gmail_oauth.json",
+    BASE_DIR / "credentials_oauth.json",
+)
+SHEETS_CREDENTIALS_FILE = _credential_path(
+    CREDENTIALS_DIR / "sheets_service.json",
+    BASE_DIR / "credentials.json",
+)
+TOKEN_FILE = _credential_path(
+    CREDENTIALS_DIR / "token.json",
+    BASE_DIR / "token.json",
+)
 
 # ---------------------------------------------------------------------------
 # Gmail settings
@@ -127,3 +147,9 @@ SHEETS_HEADERS = [
     "Proposal",
     "Matched Skills",
 ]
+
+# Status labels (Sheets + dashboard)
+STATUS_DRAFTED = "Draft Saved"
+STATUS_SKIPPED = "Skipped"
+STATUS_ERROR = "Error"
+STATUS_PENDING = "Pending"

@@ -1,94 +1,53 @@
 """
-Sheets logger — logs every processed job to Google Sheets.
-Uses the same Google OAuth token as Gmail.
+Google Sheets integration — log jobs from the agent.
 """
 
 import logging
-from datetime import datetime, timezone
 
-from googleapiclient.discovery import build
-
-import config
-from gmail_reader import get_google_credentials
+from config import SHEETS_HEADERS
+from sheets_client import get_sheets_workbook
 
 logger = logging.getLogger(__name__)
 
 
 def get_sheets_service():
-    """Build Google Sheets API service using the same Google OAuth token as Gmail."""
-    return build("sheets", "v4", credentials=get_google_credentials())
+    """Return spreadsheet workbook (alias kept for main.py)."""
+    return get_sheets_workbook()
 
 
-def ensure_headers(sheets_service):
-    """
-    Write header row to the sheet if it's empty.
-    Call once on startup.
-    """
-    if not config.GOOGLE_SHEETS_ID:
-        logger.warning("GOOGLE_SHEETS_ID not set — skipping Sheets logging.")
-        return False
-
+def ensure_headers(sheet):
+    """Ensure row 1 has the expected column headers."""
     try:
-        result = (
-            sheets_service.spreadsheets()
-            .values()
-            .get(spreadsheetId=config.GOOGLE_SHEETS_ID, range="A1:H1")
-            .execute()
-        )
-        existing = result.get("values", [])
-
-        if not existing or existing[0] != config.SHEETS_HEADERS:
-            sheets_service.spreadsheets().values().update(
-                spreadsheetId=config.GOOGLE_SHEETS_ID,
-                range="A1:H1",
-                valueInputOption="RAW",
-                body={"values": [config.SHEETS_HEADERS]},
-            ).execute()
-            logger.info("Sheet headers written.")
-
+        if not sheet:
+            return False
+        worksheet = sheet.get_worksheet(0)
+        headers = worksheet.row_values(1)
+        if not headers or headers != SHEETS_HEADERS:
+            worksheet.insert_row(SHEETS_HEADERS, 1)
         return True
     except Exception as exc:
-        logger.error(f"Failed to ensure sheet headers: {exc}")
+        logger.error("Headers error: %s", exc)
         return False
 
 
-def log_job(sheets_service, job, score, status, proposal="", matched_skills=None):
-    """
-    Append one job row to Google Sheets.
-
-    status: "drafted", "skipped", or "error"
-    """
-    if not config.GOOGLE_SHEETS_ID:
-        logger.warning("GOOGLE_SHEETS_ID not set — skipping Sheets log.")
-        return False
-
-    if sheets_service is None:
-        return False
-
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-    skills_str = ", ".join(matched_skills or [])
-
-    row = [
-        timestamp,
-        job.get("title", ""),
-        job.get("budget_display") or job.get("budget", ""),
-        score,
-        status,
-        job.get("url", ""),
-        proposal[:500] if proposal else "",  # Truncate long proposals in sheet
-        skills_str,
-    ]
-
+def log_job(sheet, job_data):
+    """Log a job row to the spreadsheet."""
     try:
-        sheets_service.spreadsheets().values().append(
-            spreadsheetId=config.GOOGLE_SHEETS_ID,
-            range="A:H",
-            valueInputOption="RAW",
-            insertDataOption="INSERT_ROWS",
-            body={"values": [row]},
-        ).execute()
-        logger.info(f"Logged to Sheets: {job.get('title')} [{status}]")
+        if not sheet:
+            return False
+        worksheet = sheet.get_worksheet(0)
+        worksheet.append_row([
+            job_data.get("timestamp", ""),
+            job_data.get("title", ""),
+            job_data.get("budget", ""),
+            job_data.get("score", ""),
+            job_data.get("status", ""),
+            job_data.get("url", ""),
+            job_data.get("proposal", ""),
+            ", ".join(job_data.get("matched_skills", [])),
+        ])
+        logger.info("Logged: %s", job_data.get("title", "Unknown"))
         return True
     except Exception as exc:
-        logger.error(f"Failed to log to Sheets: {exc}")
+        logger.error("Log error: %s", exc)
         return False

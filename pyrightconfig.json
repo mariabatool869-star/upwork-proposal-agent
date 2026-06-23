@@ -1,0 +1,23 @@
+{
+  "venvPath": ".",
+  "venv": ".venv",
+  "extraPaths": ["."],
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "extraPaths": ["."]
+    },
+    {
+      "root": "dashboard",
+      "extraPaths": ["..", "."]
+    }
+  ],
+  "exclude": [
+    "**/__pycache__",
+    "logs",
+    "data",
+    "credentials",
+    ".venv"
+  ],
+  "reportPrivateImportUsage": "none"
+}
