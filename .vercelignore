@@ -9,3 +9,16 @@ dashboard/
 __pycache__/
 .venv/
 venv/
+
+# Local agent only — not deployed to Vercel
+main.py
+gmail_reader.py
+job_parser.py
+job_scorer.py
+proposal_writer.py
+sheets_logger.py
+slack_notifier.py
+run_once.bat
+run_loop.bat
+run_dashboard.bat
+prepare_vercel_env.py
