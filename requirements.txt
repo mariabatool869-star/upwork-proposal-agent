@@ -1,12 +1,13 @@
-# Dashboard (Streamlit Cloud) — streamlit is pre-installed on Community Cloud
-pandas
-plotly
+# Vercel API (Google Sheets)
 gspread
 google-auth
-python-dotenv
 
-# Agent (local; safe to include on Cloud — not imported by dashboard)
+# Local agent (not deployed to Vercel)
 requests
 beautifulsoup4
 google-api-python-client
 google-auth-oauthlib
+python-dotenv
+pandas
+plotly
+streamlit

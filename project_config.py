@@ -1,8 +1,7 @@
 """
-Committed config for Streamlit Cloud and fresh clones.
+Committed config for Vercel dashboard API and fresh clones.
 
 Local development should still use config.py (gitignored) copied from config_sample.py.
-This module mirrors config_sample.py and reads secrets from environment / Streamlit secrets.
 """
 
 import os
