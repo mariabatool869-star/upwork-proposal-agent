@@ -38,10 +38,12 @@ function showPage(page) {
 
 async function fetchData() {
   const response = await fetch("/api/jobs");
+  const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(`API error ${response.status}`);
+    const detail = data.message || data.detail || `API error ${response.status}`;
+    throw new Error(detail);
   }
-  return response.json();
+  return data;
 }
 
 function renderStatusBanner(data) {
