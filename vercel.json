@@ -10,8 +10,5 @@
       "src": "/(.*)",
       "dest": "dashboard/app.py"
     }
-  ],
-  "env": {
-    "STREAMLIT_SERVER_PORT": "8501"
-  }
+  ]
 }
