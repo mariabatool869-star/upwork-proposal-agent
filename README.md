@@ -1,92 +1,88 @@
 # Upwork AI Proposal Agent
 
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Streamlit](https://img.shields.io/badge/dashboard-Streamlit-FF4B4B.svg)](https://streamlit.io)
 
-An open-source Python agent that turns **Vollna job alerts** into ready-to-send **Upwork proposals** — with a **Streamlit portfolio dashboard** to showcase your automation work.
+End-to-end **Python automation** that turns Vollna job alerts into scored, AI-written Upwork proposals — with a **Streamlit portfolio dashboard** backed by Google Sheets.
 
-**Cost: $0** — Gmail, Gemini, Slack, and Google Sheets free tiers only.
+**Stack:** Python · Gmail API · Google Gemini · Google Sheets · Slack · Streamlit  
+**Cost:** $0 on free tiers (Gmail, Gemini, Sheets, Slack, Streamlit Cloud)
 
 **Repository:** [github.com/mariabatool869-star/upwork-proposal-agent](https://github.com/mariabatool869-star/upwork-proposal-agent)
 
 ---
 
-## Features
+## What it does
 
-| Component | Description |
-|-----------|-------------|
-| **Gmail reader** | Fetches Vollna HTML emails (`info@vollna.com`) |
-| **Job parser** | Extracts title, budget, description, Upwork/Vollna URLs from HTML |
-| **Job scorer** | Rates jobs 1–10 against your skills profile |
-| **Proposal writer** | Generates proposals via Google Gemini (with safe fallback) |
+| Module | Role |
+|--------|------|
+| **Gmail reader** | Fetches Vollna HTML job alerts (`info@vollna.com`) |
+| **Job parser** | Extracts title, budget, description, and job URLs |
+| **Job scorer** | Rates each job 1–10 against your skills profile |
+| **Proposal writer** | Generates tailored proposals via Google Gemini |
 | **Gmail drafts** | Saves proposals for review before you submit on Upwork |
-| **Google Sheets** | Logs every job — powers the dashboard |
-| **Slack alerts** | Notifies you when a draft is ready |
-| **Streamlit dashboard** | Overview, proposals, analytics, live refresh from Sheets |
+| **Google Sheets** | Logs every job — single source of truth for the dashboard |
+| **Slack notifier** | Alerts you when a draft is ready |
+| **Streamlit dashboard** | Portfolio UI: overview, proposals, analytics |
 
 ---
 
-## Architecture
+## How it fits together
+
+The **agent runs on your computer**. The **dashboard reads Google Sheets** — locally or on Streamlit Cloud. Same spreadsheet, always in sync after you refresh.
 
 ```text
-Vollna Email (Gmail)
-        │
-        ▼
-   job_parser.py ──► job_scorer.py ──► proposal_writer.py (Gemini)
-        │                    │                    │
-        │                    │                    ▼
-        │                    │            gmail_reader.py (draft)
-        │                    ▼                    │
-        └────────────► sheets_logger.py ◄───────┘
-                              │
-                              ▼
-                    dashboard/app.py (Streamlit)
-                              │
-                              ▼
-                      slack_notifier.py
+┌─────────────────────────────────────────────────────────────────┐
+│  YOUR PC (local only)                                           │
+│                                                                 │
+│  Vollna email → main.py → score → Gemini → Gmail draft          │
+│                    │                                            │
+│                    └──────────────► Google Sheets (append row)│
+└─────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  DASHBOARD (local OR Streamlit Cloud)                           │
+│                                                                 │
+│  dashboard/app.py  ──reads──►  Google Sheets  ──►  charts & UI  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+```mermaid
+flowchart LR
+    A[Vollna Gmail] --> B[main.py]
+    B --> C[Job scorer]
+    C --> D[Gemini proposals]
+    D --> E[Gmail drafts]
+    B --> F[Google Sheets]
+    F --> G[Streamlit dashboard]
+    D --> H[Slack alert]
 ```
 
 ---
 
-## Prerequisites
+## Quick start (local)
 
-- **Python 3.9+** (3.11 or 3.12 recommended)
-- **Gmail account** receiving Vollna job alerts
-- **Google Cloud project** with Gmail API + Sheets API enabled
-- **Free API keys:** Gemini, Slack webhook, Google Sheets ID
-
----
-
-## Local setup
-
-### 1. Clone the repository
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/mariabatool869-star/upwork-proposal-agent.git
 cd upwork-proposal-agent
-```
 
-### 2. Create a virtual environment (recommended)
-
-```bash
-# Windows
 python -m venv .venv
+
+# Windows
 .venv\Scripts\activate
 
 # macOS / Linux
-python3 -m venv .venv
 source .venv/bin/activate
-```
 
-### 3. Install dependencies
-
-```bash
 python -m pip install --upgrade pip
-python -m pip install -r requirements.txt
+python -m pip install -r requirements.txt -r requirements-agent.txt
 ```
 
-### 4. Create configuration files
+### 2. Configuration
 
 ```bash
 # Windows
@@ -98,83 +94,77 @@ cp config_sample.py config.py
 cp .env.example .env
 ```
 
-Edit **`config.py`** — customize `PROFILE` (skills, rate, bio, experience).
+| File | Action |
+|------|--------|
+| `config.py` | Edit `PROFILE` — skills, rate, bio, experience |
+| `.env` | Add API keys and `GOOGLE_SHEETS_ID` (see [Configuration](#configuration)) |
+| `credentials/gmail_oauth.json` | Gmail OAuth client (Web application) |
+| `credentials/sheets_service.json` | Google Sheets service account JSON |
 
-Edit **`.env`** — add your API keys locally (see [Configuration](#configuration)).
+Share your Google Sheet with the **service account email** (Editor access).  
+On first run, complete Gmail OAuth in the browser; `credentials/token.json` is created automatically.
 
-> **Never commit `.env` to GitHub.** Only `.env.example` (placeholders) is tracked.
-
-### 5. Add Google credentials
-
-Create a `credentials/` folder and add:
-
-| File | Purpose |
-|------|---------|
-| `credentials/gmail_oauth.json` | OAuth client for Gmail (Web application type) |
-| `credentials/sheets_service.json` | Service account JSON for Google Sheets |
-
-Steps:
-
-1. [Google Cloud Console](https://console.cloud.google.com/) → create a project
-2. Enable **Gmail API** and **Google Sheets API**
-3. OAuth consent screen → add yourself as a test user
-4. Create OAuth client (Web app) → download as `credentials/gmail_oauth.json`
-5. Create a service account → download key as `credentials/sheets_service.json`
-6. Share your Google Sheet with the service account email (Editor access)
-
-On first Gmail run, complete OAuth in the browser. A token is saved to `credentials/token.json` automatically.
-
-### 6. Verify setup
+### 3. Run
 
 ```bash
-python -m py_compile main.py dashboard/app.py
-```
-
----
-
-## Running locally
-
-### Agent (process job emails once)
-
-```bash
+# Process job emails once
 python main.py
+
+# Portfolio dashboard (localhost)
+python -m streamlit run dashboard/app.py
 ```
+
+Open **http://localhost:8501** — demo login: `demo` / `demo123`
 
 | Windows shortcut | Action |
 |------------------|--------|
 | `run_once.bat` | Single agent run |
-| `run_loop.bat` | Run every 30 minutes (loop) |
+| `run_loop.bat` | Agent every 30 minutes |
 | `run_dashboard.bat` | Start Streamlit dashboard |
 
-**First run:** you may be prompted to authorize Gmail via URL + auth code.
+After `python main.py`, click **Refresh data** in the dashboard sidebar to load new rows.
 
-**Re-process emails** after parser changes:
+---
 
-```bash
-# Windows
-del data\processed_emails.json
+## Deploy dashboard on Streamlit Cloud
 
-# macOS / Linux
-rm data/processed_emails.json
+The **agent stays local**. Only the **dashboard** is deployed — it displays data from Google Sheets.
 
-python main.py
-```
-
-### Dashboard (portfolio web app)
+### 1. Generate secrets (on your PC)
 
 ```bash
-python -m streamlit run dashboard/app.py
+python prepare_streamlit_secrets.py
 ```
 
-Open **http://localhost:8501**
+Copy the full TOML output.
 
-| Demo login | Password |
-|------------|----------|
-| `demo` | `demo123` |
+### 2. Create the app
 
-Dashboard pages: **Overview** · **Proposals** · **Analytics** · **About**
+1. Go to [share.streamlit.io](https://share.streamlit.io)
+2. **New app** → connect this GitHub repo
+3. **Main file path:** `dashboard/app.py`
+4. **Python version:** 3.11 or 3.12
+5. **Secrets** → paste the TOML (must include `[gcp_service_account]`)
+6. **Deploy**
 
-After running the agent, click **Refresh data** in the sidebar to load new jobs from Google Sheets. **Recent jobs** shows the newest entries first.
+### 3. Secrets checklist
+
+| Secret | Required |
+|--------|----------|
+| `GOOGLE_SHEETS_ID` | Yes |
+| `MY_NAME` | Yes |
+| `[gcp_service_account]` | Yes — full block from `credentials/sheets_service.json` |
+| `GEMINI_API_KEY` | Optional on Cloud (agent runs locally) |
+| `SLACK_WEBHOOK_URL` | Optional on Cloud |
+
+After saving secrets, **Reboot app**. Share the sheet with the service account email.
+
+### 4. Daily workflow
+
+```bash
+python main.py              # local — writes to Sheets
+# Open Streamlit Cloud URL → Refresh data
+```
 
 ---
 
@@ -182,67 +172,67 @@ After running the agent, click **Refresh data** in the sidebar to load new jobs 
 
 ### Environment variables (`.env`)
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `GEMINI_API_KEY` | Yes | — | Gemini key from [AI Studio](https://aistudio.google.com/apikey) (must start with `AIza`) |
-| `SLACK_WEBHOOK_URL` | Yes | — | Slack incoming webhook URL |
-| `GOOGLE_SHEETS_ID` | Yes | — | Spreadsheet ID from the Google Sheets URL |
-| `MY_NAME` | Yes | — | Your name in proposal signatures |
-| `GEMINI_MODELS` | No | `gemini-2.0-flash-lite,...` | Fallback models if one hits quota |
-| `POLL_INTERVAL_MINUTES` | No | `30` | Minutes between checks in loop mode |
-| `SCORE_THRESHOLD` | No | `6` | Minimum score (1–10) to draft a proposal |
-| `MIN_BUDGET_HOURLY` | No | `15` | Skip hourly jobs below this rate |
-| `MIN_BUDGET_FIXED` | No | `100` | Skip fixed-price jobs below this amount |
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GEMINI_API_KEY` | Yes | From [Google AI Studio](https://aistudio.google.com/apikey) (`AIza…`) |
+| `GOOGLE_SHEETS_ID` | Yes | Spreadsheet ID from the Sheets URL |
+| `SLACK_WEBHOOK_URL` | Yes | Slack incoming webhook |
+| `MY_NAME` | Yes | Name in proposal signatures |
+| `GEMINI_MODELS` | No | Fallback models if quota is hit |
+| `SCORE_THRESHOLD` | No | Min score to draft (default `6`) |
+| `MIN_BUDGET_HOURLY` | No | Skip hourly jobs below this (default `15`) |
+| `MIN_BUDGET_FIXED` | No | Skip fixed jobs below this (default `100`) |
+| `POLL_INTERVAL_MINUTES` | No | Loop interval (default `30`) |
 
 ### Profile (`config.py`)
 
-Copy from `config_sample.py` and edit:
-
-- `PROFILE["skills"]` — skill list for matching
-- `PROFILE["primary_skills"]` — weighted scoring keywords
-- `PROFILE["rate"]` — hourly rate used in proposals
-- `PROFILE["bio"]` and `experience_highlights` — used by Gemini and the dashboard
+Copy from `config_sample.py`. Customize skills, rate, bio, and `experience_highlights` — used by the scorer, Gemini, and dashboard.
 
 ---
 
 ## Project structure
 
 ```text
-├── main.py                 # Agent orchestrator
-├── config_sample.py        # Config template → copy to config.py locally
-├── gmail_reader.py         # Gmail API
-├── job_parser.py           # Vollna HTML email parser
-├── job_scorer.py           # Job scoring (1–10)
-├── proposal_writer.py      # Gemini proposals
-├── sheets_client.py        # Shared Google Sheets connection
-├── sheets_logger.py        # Write rows to Sheets
-├── slack_notifier.py       # Slack webhooks
+upwork-proposal-agent/
+├── main.py                    # Agent orchestrator (local only)
+├── config_sample.py           # Profile template → copy to config.py
+├── project_config.py          # Committed config fallback (Streamlit Cloud)
+├── config_loader.py           # Local config.py or project_config.py
+├── gmail_reader.py            # Gmail API
+├── job_parser.py                # Vollna email parser
+├── job_scorer.py                # Job scoring (1–10)
+├── proposal_writer.py           # Gemini proposals
+├── sheets_client.py             # Shared Sheets connection
+├── sheets_logger.py             # Append rows to Sheets
+├── slack_notifier.py            # Slack webhooks
+├── prepare_streamlit_secrets.py # Generate Streamlit Cloud secrets TOML
 ├── dashboard/
-│   ├── app.py              # Streamlit portfolio dashboard
-│   ├── auth.py             # Demo login
-│   └── data_utils.py       # Sheets data, charts, recent jobs
-├── credentials/            # Google keys (gitignored — local only)
-├── .streamlit/config.toml  # Dashboard theme (local)
-├── pyrightconfig.json      # Type-checker config
-├── requirements.txt
-├── LICENSE                 # MIT License
-├── .env.example            # Template only (safe for GitHub)
-├── .env                    # Your keys (gitignored — never push)
-└── run_*.bat               # Windows shortcuts
+│   ├── app.py                   # Streamlit dashboard (Cloud entrypoint)
+│   ├── auth.py                  # Demo login
+│   └── data_utils.py            # Sheets data & charts
+├── credentials/                 # Google keys (gitignored)
+├── .streamlit/
+│   ├── config.toml              # Dashboard theme
+│   └── secrets.toml.example     # Secrets template
+├── requirements.txt             # Dashboard / Streamlit Cloud
+├── requirements-agent.txt       # Extra deps for local agent
+├── run_once.bat                 # Windows shortcuts
+├── run_loop.bat
+└── run_dashboard.bat
 ```
 
 ---
 
 ## Security
 
-**Never commit these files:**
+**Never commit:**
 
 | Path | Contains |
 |------|----------|
-| `.env` | Gemini key, Slack webhook, Sheets ID |
-| `credentials/` | Gmail OAuth, service account, token |
+| `.env` | API keys, webhooks, sheet ID |
+| `credentials/` | OAuth client, service account, Gmail token |
 | `config.py` | Personal profile |
-| `logs/` / `data/` | Runtime history |
+| `logs/` / `data/` | Job history |
 
 Before every push:
 
@@ -251,25 +241,7 @@ git check-ignore -v .env credentials config.py
 git status
 ```
 
-If secrets were ever pushed, rotate all keys immediately and use [git filter-repo](https://github.com/newren/git-filter-repo) to scrub history.
-
----
-
-## Contributing
-
-Contributions are welcome under the [MIT License](LICENSE).
-
-1. **Fork** the repository on GitHub
-2. **Create a branch:** `git checkout -b feature/your-feature`
-3. **Make changes** — do not commit secrets
-4. **Test locally:** `python main.py` and `streamlit run dashboard/app.py`
-5. **Open a Pull Request**
-
-### Pull request checklist
-
-- [ ] No `.env`, `credentials/`, or `config.py` in the commit
-- [ ] Changes tested locally
-- [ ] README updated if setup or behavior changed
+If secrets were ever pushed, rotate all keys and scrub git history.
 
 ---
 
@@ -277,40 +249,37 @@ Contributions are welcome under the [MIT License](LICENSE).
 
 | Problem | Fix |
 |---------|-----|
-| Recent jobs not updating | Click **Refresh data** in dashboard sidebar |
-| Recent jobs show old entries | Fixed in latest `data_utils.py` — pull latest and restart Streamlit |
+| Dashboard: *Google Sheets credentials missing* | Run `python prepare_streamlit_secrets.py`; paste full TOML into Streamlit **Secrets** including `[gcp_service_account]`; reboot app |
+| Dashboard: *Permission denied* | Share the sheet with the service account email (Editor) |
+| Dashboard empty after agent run | Click **Refresh data** in the sidebar |
+| `GEMINI_API_KEY is not set` | Add key to `.env` |
 | `Missing credentials/gmail_oauth.json` | Add OAuth JSON to `credentials/` |
-| `Missing credentials/sheets_service.json` | Add service account JSON to `credentials/` |
-| `GEMINI_API_KEY is not set` | Add key to `.env` (must start with `AIza`) |
-| Gemini `429 quota exceeded` | Use AI Studio key; set `GEMINI_MODELS` in `.env` |
-| No Vollna emails found | Use the Gmail account that receives Vollna alerts |
-| Token expired | Delete `credentials/token.json` and run `python main.py` again |
-| Dashboard empty | Run `python main.py` first; click **Refresh data** |
-| `.env` on git status | Do not `git add .env` — it must stay gitignored |
+| Gmail token expired | Delete `credentials/token.json`; run `python main.py` again |
+| No Vollna emails | Use the Gmail account that receives Vollna alerts |
+| Re-process old emails | Delete `data/processed_emails.json`; run agent again |
+| Streamlit Cloud: `import config` fails | Expected — Cloud uses `project_config.py` + Secrets (not `config.py`) |
 
 ---
 
-## Workflow
+## Contributing
 
-1. Vollna sends a job alert to Gmail
-2. Agent parses, scores, and skips poor matches
-3. Gemini writes a tailored proposal
-4. Draft saved in Gmail; row logged in Google Sheets
-5. Slack notifies you
-6. Dashboard shows stats and recent jobs
+Contributions welcome under the [MIT License](LICENSE).
+
+1. Fork the repo
+2. `git checkout -b feature/your-feature`
+3. Test: `python main.py` and `streamlit run dashboard/app.py`
+4. Open a Pull Request (no secrets in commits)
 
 ---
 
 ## License
 
-This project is licensed under the **MIT License** — see [LICENSE](LICENSE).
-
-You are free to use, modify, and distribute this software. Attribution is appreciated.
+**MIT License** — see [LICENSE](LICENSE).
 
 ---
 
 ## Author
 
-**Maria Batool** — AI Automation Developer
+**Maria Batool** — AI Automation Developer · 13+ years
 
-Portfolio project demonstrating end-to-end workflow automation with Python, AI, and free-tier cloud APIs.
+Portfolio project demonstrating production-style workflow automation: Gmail ingestion, LLM proposals, structured logging, and a live analytics dashboard.
