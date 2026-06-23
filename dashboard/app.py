@@ -238,3 +238,13 @@ else:
     ### Skills
     {', '.join(config.PROFILE.get('skills', [])[:12])}
     """)
+# ============================================================
+# VERCEL - Expose app
+# ============================================================
+
+# This is what Vercel looks for
+app = st
+
+# Handler function
+def handler(request=None):
+    return app
