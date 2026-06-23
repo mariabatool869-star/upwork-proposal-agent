@@ -1,0 +1,14 @@
+# Static landing page only — exclude Python agent from Vercel
+main.py
+*.py
+requirements.txt
+dashboard/
+credentials/
+data/
+logs/
+.streamlit/
+.venv/
+__pycache__/
+.env
+config.py
+*.bat
