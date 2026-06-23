@@ -1,12 +1,3 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "functions": {
-    "api/jobs.py": {
-      "maxDuration": 30,
-      "includeFiles": "lib/**,project_config.py"
-    }
-  },
-  "rewrites": [
-    { "source": "/api/jobs", "destination": "/api/jobs.py" }
-  ]
+  "$schema": "https://openapi.vercel.sh/vercel.json"
 }
