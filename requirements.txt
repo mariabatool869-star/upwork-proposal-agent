@@ -1,13 +1,7 @@
-fastapi
-gspread
-google-auth
-python-dotenv
-
-# Local agent (ignored on Vercel via smaller bundle; safe to list here)
-requests
-beautifulsoup4
-google-api-python-client
-google-auth-oauthlib
+streamlit
 pandas
 plotly
-streamlit
+gspread
+google-auth
+oauth2client
+python-dotenv

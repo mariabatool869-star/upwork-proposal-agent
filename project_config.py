@@ -1,7 +1,7 @@
 """
-Committed config for Vercel dashboard API and fresh clones.
+Committed config for Streamlit Cloud and fresh clones.
 
-Local development should still use config.py (gitignored) copied from config_sample.py.
+Local development should use config.py (gitignored) copied from config_sample.py.
 """
 
 import os

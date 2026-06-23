@@ -1,0 +1,5 @@
+# Local agent only (pip install -r requirements-agent.txt)
+requests
+beautifulsoup4
+google-api-python-client
+google-auth-oauthlib

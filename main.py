@@ -172,7 +172,7 @@ def main():
         sheet_id = os.getenv("GOOGLE_SHEETS_ID", "")
         if sheet_id:
             logger.info(
-                "Rows saved to Google Sheets — refresh your Vercel dashboard to see updates."
+                "Rows saved to Google Sheets — refresh your Streamlit dashboard to see updates."
             )
 
     except Exception as exc:

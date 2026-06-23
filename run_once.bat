@@ -5,6 +5,6 @@ echo.
 echo Agent runs locally. Results go to Google Sheets.
 echo After it finishes, refresh your Vercel dashboard to see new jobs.
 echo.
-python run_agent.py
+python main.py
 echo.
 pause

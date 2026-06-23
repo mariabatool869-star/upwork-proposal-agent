@@ -1,18 +1,12 @@
 """
-Upwork AI Agent — LOCAL Streamlit dashboard (localhost only).
+Upwork AI Agent — Portfolio Dashboard (Streamlit Cloud + local).
 
-NOT used on Vercel. The live portfolio site is public/index.html + api/jobs/.
-
-Run:  run_dashboard.bat   or   streamlit run dashboard/streamlit_app.py
-Data: same Google Sheets as the agent (python run_agent.py) and Vercel refresh.
+Displays job data from Google Sheets only. The AI agent (main.py) runs locally.
 """
 import subprocess
 import sys
 from pathlib import Path
 
-# ============================================================
-# FIX: Add root directory to path so config can be found
-# ============================================================
 ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
@@ -100,7 +94,7 @@ sheets_ok, sheets_message = get_sheets_status()
 if not sheets_ok:
     st.warning(f"**Google Sheets not connected** — {sheets_message}")
 elif df.empty:
-    st.info(f"**Sheets connected** — {sheets_message} Run the agent locally (`python run_agent.py`) to add jobs.")
+    st.info(f"**Sheets connected** — {sheets_message} Run the agent locally (`python main.py`) to add jobs.")
 
 # --- Sidebar ---
 with st.sidebar:
@@ -124,9 +118,9 @@ with st.sidebar:
     )
     if can_run_agent:
         if st.button("▶ Run agent now", width="stretch"):
-            with st.spinner("Running run_agent.py..."):
+            with st.spinner("Running main.py..."):
                 r = subprocess.run(
-                    [sys.executable, "run_agent.py"],
+                    [sys.executable, "main.py"],
                     cwd=str(ROOT_DIR),
                     capture_output=True,
                     text=True,
@@ -141,7 +135,7 @@ with st.sidebar:
                     with st.expander("Error output"):
                         st.code(r.stderr or r.stdout)
     else:
-        st.caption("Run the agent locally with `python run_agent.py` (Gmail OAuth required).")
+        st.caption("Run the agent on your PC with `python main.py`, then refresh here.")
     st.divider()
     if st.button("Logout", width="stretch"):
         logout()
@@ -184,13 +178,13 @@ if page == "Overview":
             fig.update_layout(height=280, margin=dict(l=0, r=0, t=10, b=0))
             st.plotly_chart(fig, width="stretch")
         else:
-            st.info("Run the agent to populate data.")
+            st.info("Run the agent locally to populate data.")
 
     st.subheader("Recent jobs")
     if not sheets_ok:
         st.warning("Fix the Google Sheets connection above to load job data.")
     elif df.empty:
-        st.info("No job rows in the sheet yet. Run the agent locally with `python run_agent.py`.")
+        st.info("No job rows yet. Run `python main.py` on your PC, then click **Refresh data**.")
     else:
         show = get_recent_jobs(df, limit=10).copy()
         if "Date" in show.columns:
