@@ -1,6 +1,10 @@
 """
-Upwork AI Agent — Portfolio Dashboard
-Shows automation achievements: jobs scored, proposals drafted, analytics.
+Upwork AI Agent — LOCAL Streamlit dashboard (localhost only).
+
+NOT used on Vercel. The live portfolio site is public/index.html + api/jobs/.
+
+Run:  run_dashboard.bat   or   streamlit run dashboard/streamlit_app.py
+Data: same Google Sheets as the agent (python main.py) and Vercel refresh.
 """
 import subprocess
 import sys
